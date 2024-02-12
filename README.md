@@ -1,10 +1,13 @@
 **The project title:**
+
 Wordle Puzzle Solver
 
 **The URL to the GitHub repository:**
+
 https://github.com/shanmukha-harsha/wordle-puzzle-solver
 
 **Milestones with deadlines:**
+
 Week 1: Basic Flask & Github Setup.
 
 Week 2: Authentication & Login.
