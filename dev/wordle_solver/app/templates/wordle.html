@@ -1,0 +1,102 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<script>
+    const maxAttempts = 6;
+    const wordLength = 5;
+    let attempts = 0;
+    let currentGuess = [];
+    let rightWord = "RIGHT"; // Example right word, you'll likely want to randomize this
+    
+    function startGame() {
+        console.log("starting game")
+        document.getElementById('game-board').innerHTML = '';
+        document.getElementById('message').textContent = '';
+        for (let i = 0; i < maxAttempts; i++) {
+            const row = document.createElement('div');
+            row.className = 'game-row';
+            for (let j = 0; j < wordLength; j++) {
+                const cell = document.createElement('div');
+                cell.className = 'game-square';
+                row.appendChild(cell);
+            }
+            document.getElementById('game-board').appendChild(row);
+        }
+        attachKeyboardListener();
+    }
+    
+    function attachKeyboardListener() {
+        document.addEventListener('keydown', handleKeyPress);
+    }
+    
+    function handleKeyPress(event) {
+        if (event.key === 'Enter') {
+            // Check if the word is complete
+            if (currentGuess.length === wordLength) {
+                const guess = currentGuess.join('');
+                // Process guess
+                if (guess === rightWord) {
+                    document.getElementById('message').textContent = 'Congratulations! You guessed the word!';
+                    document.removeEventListener('keydown', handleKeyPress);
+                } else {
+                    if (attempts < maxAttempts) {
+                        updateBoardWithGuess(guess);
+                        attempts++;
+                        currentGuess = [];
+                        if (attempts === maxAttempts) {
+                            document.getElementById('message').textContent = `Game Over! The right word was ${rightWord}.`;
+                            document.removeEventListener('keydown', handleKeyPress);
+                        }
+                    }
+                }
+            }
+        } else if (event.key === 'Backspace') {
+            currentGuess.pop();
+            updateCurrentRow();
+        } else if (/^[a-zA-Z]$/.test(event.key) && currentGuess.length < wordLength) {
+            currentGuess.push(event.key.toUpperCase());
+            updateCurrentRow();
+        }
+    }
+    
+    function updateBoardWithGuess(guess) {
+        const row = document.getElementById('game-board').children[attempts];
+        for (let i = 0; i < wordLength; i++) {
+            const cell = row.children[i];
+            cell.textContent = guess[i];
+            if (guess[i] === rightWord[i]) {
+                cell.style.backgroundColor = 'green';
+            } else if (rightWord.includes(guess[i])) {
+                cell.style.backgroundColor = 'yellow';
+            } else {
+                cell.style.backgroundColor = 'grey';
+            }
+        }
+    }
+    
+    function updateCurrentRow() {
+        const row = document.getElementById('game-board').children[attempts];
+        for (let i = 0; i < wordLength; i++) {
+            const cell = row.children[i];
+            cell.textContent = currentGuess[i] || '';
+            cell.style.backgroundColor = '';
+        }
+    }
+    
+    startGame(); // Start the game as soon as the page loads
+</script>
+
+<div class="wordle-container">
+    <h1>Wordle Game</h1>
+    <div id="game-board">
+        <!-- Placeholder for game board squares -->
+    </div>
+    <p id="message"></p>
+    <button onclick="startGame()">Start Game</button>
+</div>
+{% endblock %}
+
+{% block scripts %}
+
+{% endblock %}
