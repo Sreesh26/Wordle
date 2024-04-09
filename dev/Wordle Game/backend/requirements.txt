@@ -1,0 +1,4 @@
+Flask
+Flask-Cors
+SQLAlchemy==1.4.32
+PyJWT
