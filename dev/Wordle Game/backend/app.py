@@ -56,7 +56,7 @@ def login():
         'exp': datetime.utcnow() + timedelta(days=1)  # Token expiration time (1 day)
     }, app.config['SECRET_KEY'])
 
-    return jsonify({"token": token.decode('utf-8')}), 200
+    return jsonify({"token": token}), 200
 
 @app.route('/auth/signup', methods=['POST'])
 def signup():
