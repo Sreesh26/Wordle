@@ -11,6 +11,9 @@ Before you Begin make sure you have the following installed -
    ```python
    pip install -r requirements.txt
    ```
+   
+  ```python
+  pip install psycopg2
 
 2. Then, Run the server
    ```python
