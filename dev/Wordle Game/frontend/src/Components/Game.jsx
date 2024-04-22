@@ -1,11 +1,13 @@
 import { useState, useEffect } from 'react';
 import axios from 'axios'
+import { useNavigate } from 'react-router-dom';
 
 function Game() {
     const [guesses, setGuesses] = useState(Array(6).fill(Array(5).fill('')));
     const [currentGuess, setCurrentGuess] = useState(0);
     const [results, setResults] = useState([]);
     const [tokenPresent, setTokenPresent] = useState(false);
+    const navigate = useNavigate();
 
 
     useEffect(() => {
@@ -117,7 +119,10 @@ function Game() {
           className="px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600 disabled:bg-green-300"
           disabled={currentGuess >= 6}
         >
-          Submit
+         Submit
+        </button> 
+        <button onClick={() => navigate('/hints')} className="mt-4 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600">
+              Show Hints
         </button>
       </div>
     );

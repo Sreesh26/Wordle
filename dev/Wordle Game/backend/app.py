@@ -36,6 +36,38 @@ words = ["crane", "lives", "brink", "sight", "grape", "stage", "about", "flock"]
 daily_word = random.choice(words).upper()
 print(daily_word)
 
+@app.route('/hints', methods=['POST'])
+def get_hints():
+    data = request.get_json()
+    correct_letters = set(data.get('correctLetters', ''))
+    misplaced_letters = set(data.get('misplacedLetters', ''))
+    wrong_letters = set(data.get('wrongLetters', ''))
+    
+    if ',' in correct_letters:
+        correct_letters.remove(',')
+
+    if ',' in wrong_letters:
+        wrong_letters.remove(',')
+
+    print(correct_letters, misplaced_letters, wrong_letters)
+
+    valid_words = [word for word in words if is_valid_hint(word, correct_letters, misplaced_letters, wrong_letters)]
+    print(valid_words)
+    return jsonify(valid_words)
+
+def is_valid_hint(word, correct, misplaced, wrong):
+    word_set = set(word)
+    print(word_set)
+    print(correct, wrong, misplaced)
+    if not correct.issubset(word_set):
+        return False
+    if any((c in word_set for c in wrong)):
+        return False
+    #if not all((c in word_set for c in misplaced)):
+    #    return False
+    return True
+
+
 @app.route('/auth/login', methods=['POST'])
 def login():
     data = request.get_json()
@@ -50,13 +82,18 @@ def login():
 
     if not user or user.password != password:
         return jsonify({"error": "Invalid credentials."}), 401
+    
+    else:
+        print("User Exists")
 
     token = jwt.encode({
         'username': user.username,
         'exp': datetime.utcnow() + timedelta(days=1)  # Token expiration time (1 day)
     }, app.config['SECRET_KEY'])
 
-    return jsonify({"token": token}), 200
+    print(token)
+
+    return jsonify({"token": token.decode('utf-8')}), 200 
 
 @app.route('/auth/signup', methods=['POST'])
 def signup():
