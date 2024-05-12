@@ -27,21 +27,91 @@ class User(Base):
     email = Column(String(100), unique=True, nullable=False)
     firstname = Column(String(50), nullable=False)
     lastname = Column(String(50), nullable=False)
+    score = Column(Integer, default=0)
 
 # Create database tables
 Base.metadata.create_all(engine)
 
+def load_words_from_file(file_path):
+    with open(file_path, 'r') as file:
+        return [line.strip().upper() for line in file if line.strip()]
+
 # Load a list of words from a file or define it directly
-words = ["crane", "lives", "brink", "sight", "grape", "stage", "about", "flock"]
+#words = ["crane", "lives", "brink", "sight", "grape", "stage", "about", "flock"]
+words = load_words_from_file('words.txt')
 daily_word = random.choice(words).upper()
 print(daily_word)
+
+# @app.route('/initialize', methods=['GET'])
+# def initialize_game():
+#     global daily_word
+#     daily_word = random.choice(words).upper()
+#     return jsonify({"message": "Game initialized", "word": daily_word})
+
+@app.route('/initialize', methods=['GET'])
+def initialize_game():
+    global daily_word
+    daily_word = random.choice(words).upper()
+
+    auth_header = request.headers.get('Authorization')
+    if not auth_header:
+        return jsonify({"error": "Authorization token is missing"}), 401
+
+    token = auth_header.split(" ")[1]
+    try:
+        data = jwt.decode(token, app.config['SECRET_KEY'], algorithms=["HS256"])
+        username = data['username']
+
+        session = Session()
+        user = session.query(User).filter_by(username=username).first()
+        if not user:
+            return jsonify({"error": "User not found"}), 404
+
+        # Fetch and send the current score from the database
+        return jsonify({
+            "message": "Game initialized", 
+            "word": daily_word,
+            "score": user.score  # Include the current score
+        })
+
+    except jwt.ExpiredSignatureError:
+        return jsonify({"error": "Token expired"}), 401
+    except Exception as e:
+        return jsonify({"error": str(e)}), 400
+
+
+@app.route('/auth/score', methods=['GET'])
+def get_score():
+    auth_header = request.headers.get('Authorization')
+    if not auth_header:
+        return jsonify({"error": "Authorization token is missing"}), 401
+
+    token = auth_header.split(" ")[1]
+    try:
+        data = jwt.decode(token, app.config['SECRET_KEY'], algorithms=["HS256"])
+        username = data['username']
+
+        session = Session()
+        user = session.query(User).filter_by(username=username).first()
+        if not user:
+            return jsonify({"error": "User not found"}), 404
+
+        return jsonify({"score": user.score}), 200
+
+    except jwt.ExpiredSignatureError:
+        return jsonify({"error": "Token expired"}), 401
+    except Exception as e:
+        return jsonify({"error": str(e)}), 400
+
 
 @app.route('/hints', methods=['POST'])
 def get_hints():
     data = request.get_json()
     correct_letters = set(data.get('correctLetters', ''))
+    correct_letters = {letter.lower() for letter in correct_letters}
     misplaced_letters = set(data.get('misplacedLetters', ''))
     wrong_letters = set(data.get('wrongLetters', ''))
+    wrong_letters = {letter.lower() for letter in wrong_letters}
     
     if ',' in correct_letters:
         correct_letters.remove(',')
@@ -49,16 +119,14 @@ def get_hints():
     if ',' in wrong_letters:
         wrong_letters.remove(',')
 
-    print(correct_letters, misplaced_letters, wrong_letters)
-
-    valid_words = [word for word in words if is_valid_hint(word, correct_letters, misplaced_letters, wrong_letters)]
-    print(valid_words)
+    valid_words = [word for word in words if is_valid_hint(word.lower(), correct_letters, misplaced_letters, wrong_letters)]
+    print(len(valid_words))
+    print(len(words))
     return jsonify(valid_words)
 
 def is_valid_hint(word, correct, misplaced, wrong):
+    print(word)
     word_set = set(word)
-    print(word_set)
-    print(correct, wrong, misplaced)
     if not correct.issubset(word_set):
         return False
     if any((c in word_set for c in wrong)):
@@ -129,22 +197,59 @@ def signup():
 @app.route('/guess', methods=['POST'])
 def make_guess():
     data = request.get_json()
-    print(data)
     guess = data['guess'].upper()
-    
+
     if len(guess) != 5:
         return jsonify({"error": "Each guess must be exactly 5 letters."}), 400
-    
-    result = []
-    for i, letter in enumerate(guess):
-        if letter == daily_word[i]:
-            result.append('correct')
-        elif letter in daily_word:
-            result.append('present')
-        else:
-            result.append('absent')
-        
-    return jsonify(result)
+
+    # Authenticate the user first
+    auth_header = request.headers.get('Authorization')
+    if not auth_header:
+        return jsonify({"error": "Authorization token is missing"}), 401
+
+    token = auth_header.split(" ")[1]
+    try:
+        data = jwt.decode(token, app.config['SECRET_KEY'], algorithms=["HS256"])
+        username = data['username']
+
+        session = Session()
+        user = session.query(User).filter_by(username=username).first()
+        if not user:
+            return jsonify({"error": "User not found"}), 404
+
+        # Check the guess against the daily word
+        result = []
+        for i, letter in enumerate(guess):
+            if letter == daily_word[i]:
+                result.append('correct')
+            elif letter in daily_word:
+                result.append('present')
+            else:
+                result.append('absent')
+        print(user.score)
+        print(user.username)
+
+        # Update the score based on the result
+        game_finished = request.json.get('currentGuess') == 5 or all(r == 'correct' for r in result)
+
+        # Update the score based on the final result
+        if game_finished:
+            if all(r == 'correct' for r in result):
+                user.score += 100
+            else:
+                # Reduce score only if it's the last guess and they haven't guessed it correctly
+                user.score -= 20
+
+        session.commit()
+
+        return jsonify({"result": result, "score": user.score, "gameFinished": game_finished}), 200
+
+
+    except jwt.ExpiredSignatureError:
+        return jsonify({"error": "Token expired"}), 401
+    except Exception as e:
+        return jsonify({"error": str(e)}), 400
+
 
 if __name__ == '__main__':
     app.run(debug=True)
