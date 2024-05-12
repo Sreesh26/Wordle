@@ -6,14 +6,16 @@ from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
 import jwt
 from datetime import datetime, timedelta
+from dotenv import load_dotenv
+import os
 
-
+load_dotenv()
 
 app = Flask(__name__)
 CORS(app)
-app.config['SECRET_KEY'] = 'secretkey'
+app.config['SECRET_KEY'] = os.getenv('SECRET_KEY')
 
-DB_URI = 'postgresql://avnadmin:AVNS_PWrbvZPiqMp8rihRXrX@wordle-app-sriharsha07.a.aivencloud.com:13443/defaultdb?sslmode=require'  # Update with your database credentials
+DB_URI = os.getenv('DB_URI')
 engine = create_engine(DB_URI)
 Session = sessionmaker(bind=engine)
 Base = declarative_base()
