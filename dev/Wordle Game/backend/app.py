@@ -163,7 +163,7 @@ def login():
 
     print(token)
 
-    return jsonify({"token": token.decode('utf-8')}), 200 
+    return jsonify({"token": token}), 200 
 
 @app.route('/auth/signup', methods=['POST'])
 def signup():
@@ -254,4 +254,4 @@ def make_guess():
 
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    app.run(host='0.0.0.0', ssl_context="adhoc", port=5000, debug=True)

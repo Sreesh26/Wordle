@@ -10,7 +10,6 @@ Before you Begin make sure you have the following installed -
 1. Navigate to dev/Wordle Game/backend and run
    ```python
    pip install -r requirements.txt
-   pip install psycopg2
    ```
 
 2. Then, Run the server

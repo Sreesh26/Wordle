@@ -13,13 +13,14 @@ function Signup() {
 
     async function handleSignup() {
         try {
-            const response = await axios.post("http://localhost:5000/auth/signup", {
+            const response = await axios.post("https://18.212.87.142:5000/auth/signup", {
                 username,
                 password,
                 email,
                 firstname,
                 lastname
             });
+            print(response)
             navigate("/", { state: { message: 'Signup Successful!' } });
         } catch (error) {
             console.error("Error Creating User", response.data.message);

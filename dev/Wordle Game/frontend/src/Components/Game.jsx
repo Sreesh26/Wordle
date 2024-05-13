@@ -29,7 +29,7 @@ function Game() {
             return;
         }
         try {
-            const response = await axios.get('http://localhost:5000/initialize', {
+            const response = await axios.get('https://18.212.87.142:5000/initialize', {
                 headers: {
                     Authorization: `Bearer ${token}`
                 }
@@ -77,7 +77,7 @@ function Game() {
   
       try {
           const guessWord = guesses[currentGuess].join('');
-          const response = await axios.post('http://localhost:5000/guess', {
+          const response = await axios.post('https://18.212.87.142:5000/guess', {
               guess: guessWord,
               currentGuess: currentGuess  // Send the index of the current guess
           }, {

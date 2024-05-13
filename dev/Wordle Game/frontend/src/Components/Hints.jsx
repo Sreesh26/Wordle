@@ -14,7 +14,7 @@ function Hints() {
         const token = localStorage.getItem('token');
         console.log("here")
         try {
-            const response = await axios.post('http://localhost:5000/hints', {
+            const response = await axios.post('https://18.212.87.142:5000/hints', {
                 correctLetters,
                 misplacedLetters,
                 wrongLetters
