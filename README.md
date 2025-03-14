@@ -20,10 +20,6 @@ If you get an error while signing up or logging in, follow the below steps -
 
    - Close the tab, and try logging in again.
 
-**The URL to the GitHub repository:**
-
-https://github.com/shanmukha-harsha/wordle-puzzle-solver
-
 ## **GETTING STARTED**
 
 Before you Begin make sure you have the following installed - 
